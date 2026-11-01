@@ -157,6 +157,12 @@ data/datasets/{org_id}/{dataset_id}/v{n}-{fingerprint12}.csv
 - Design: light neutral canvas, dense tabular layouts, blue/teal accents — an admin tool,
   not a marketing page. All motion respects `prefers-reduced-motion`; focus states are
   visible; every control is reachable by keyboard.
+- Accessibility is asserted, not assumed: `apps/web/tests/contrast.test.ts` reads the palette
+  tokens out of `globals.css` and fails when a text/background pair drops below WCAG AA
+  (4.5:1, or 3:1 for large text). Finding real failures is the point — the first run caught
+  teal badges at 4.22:1, amber badges at 4.15:1, muted ink at 4.48:1 on the deepest canvas
+  and faint ink at 2.72:1, all of which were darkened to pass. There is no automated axe audit;
+  the claim here is contrast plus keyboard-first markup plus textual chart equivalents, no more.
 
 ## 8. Failure behaviour
 

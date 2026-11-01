@@ -205,7 +205,7 @@ All of the following was run in this workspace (Python 3.11, Node 20):
 | `mypy services/api/app packages/forecasting/src services/worker/worker packages/contracts/src` | Success: no issues in 41 source files |
 | `npx tsc --noEmit` (apps/web) | clean |
 | `npx next lint` (apps/web) | no warnings or errors |
-| `npx vitest run` (apps/web) | 12 passed (formatting + API client) |
+| `npx vitest run` (apps/web) | 18 passed (formatting, API client, palette contrast) |
 | `npx next build` (apps/web) | success, 12 routes |
 | `python scripts/export-openapi.py --check` | snapshot current (45 paths) |
 | `python scripts/smoke_study.py` | 12 series, 2 models, ~4 s (synthetic smoke; see [`docs/benchmark.md`](docs/benchmark.md)) |

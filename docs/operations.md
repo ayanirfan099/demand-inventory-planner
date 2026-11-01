@@ -118,7 +118,7 @@ database that contains real data.
 | Lint / types | `ruff check .`, `mypy services/api/app packages/forecasting/src services/worker/worker packages/contracts/src` | |
 | Contract drift | `pytest packages/contracts/tests -q` | 10 tests: limits, metric keys, error codes, alert keys, OpenAPI snapshot |
 | Synthetic smoke | `python scripts/smoke_study.py` | Reproducible pipeline run; explicitly not a benchmark (`docs/benchmark.md`) |
-| Web unit | `cd apps/web && npm run typecheck && npm run lint && npm test` | Vitest: 12 tests (formatting, API client) |
+| Web unit | `cd apps/web && npm run typecheck && npm run lint && npm test` | Vitest: 18 tests (formatting, API client, WCAG contrast of the palette tokens) |
 | Web e2e | `cd apps/web && npm run e2e` | Playwright; boots its own API + web on a throwaway SQLite DB |
 
 The e2e script (`scripts/e2e-server.sh`) deletes and recreates `data/e2e/e2e.db`. Never point
