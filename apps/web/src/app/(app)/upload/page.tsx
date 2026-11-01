@@ -342,7 +342,7 @@ export default function UploadPage() {
       >
         <form className="form-grid" onSubmit={generateSynthetic}>
           <div className="field">
-            <label htmlFor="synthetic-name">Dataset name</label>
+            <label htmlFor="synthetic-name">Synthetic dataset name</label>
             <input
               id="synthetic-name"
               type="text"

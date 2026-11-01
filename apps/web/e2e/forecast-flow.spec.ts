@@ -24,7 +24,7 @@ test.describe("forecast workflow", () => {
     await expect(seriesKpi.locator(".kpi-value")).toHaveText("4");
     await expect(page.getByText(/no data-quality warnings/i)).toBeVisible();
 
-    await page.getByLabel("Dataset name").fill("E2E demand");
+    await page.locator("#dataset-name").fill("E2E demand");
     await page.getByRole("button", { name: /confirm import/i }).click();
     await expect(page.getByText(/import complete/i)).toBeVisible();
 
