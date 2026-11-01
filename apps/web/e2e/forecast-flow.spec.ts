@@ -67,12 +67,22 @@ test.describe("forecast workflow", () => {
     expect(download.suggestedFilename()).toMatch(/^report-run\d+-.+\.json$/);
 
     // --- Reorder suggestions --------------------------------------------------------
+    // A policy name is unique per dataset, and Playwright retries reuse the database, so the
+    // name carries a timestamp: a retry must not collide with its own earlier attempt.
+    const policyName = `E2E weekly review ${Date.now()}`;
     await page.goto("/planning");
-    await page.getByLabel("Policy name").fill("E2E weekly review");
+
+    // Pin the dataset explicitly: the form defaults to the first dataset, but this run needs
+    // the one that has a completed forecast run.
+    const policyDataset = page.locator("#policy-dataset");
+    await expect(policyDataset.locator("option", { hasText: "E2E demand" })).toHaveCount(1);
+    await policyDataset.selectOption({ label: "E2E demand" });
+
+    await page.locator("#policy-name").fill(policyName);
     await page.getByLabel(/minimum order quantity/i).fill("12");
     await page.getByLabel(/pack size/i).fill("6");
     await page.getByRole("button", { name: /create policy/i }).click();
-    await expect(page.getByText(/policy "E2E weekly review" created/i).first()).toBeVisible();
+    await expect(page.getByText(new RegExp(`policy "${policyName}" created`, "i")).first()).toBeVisible();
 
     await page.getByRole("button", { name: /generate suggestions/i }).click();
     await expect(page.getByText(/generated \d+ suggestions/i).first()).toBeVisible();
