@@ -2,7 +2,6 @@ name: CI
 
 permissions:
   contents: read
-  issues: write
 
 on:
   push:
@@ -92,59 +91,30 @@ jobs:
     runs-on: ubuntu-latest
     needs: [python, web]
     timeout-minutes: 25
+    # The official Playwright image ships Chromium pre-installed, so the job never depends on
+    # a browser CDN download at run time.
+    container:
+      image: mcr.microsoft.com/playwright:v1.55.0-noble
+      options: --ipc=host
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: requirements/*.txt
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+      - name: Python runtime for the test server
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3 python3-venv curl
 
       # scripts/e2e-server.sh expects a repo-root .venv, so build one here rather than
       # letting the runner pick a different interpreter.
       - name: Python environment for the e2e server
         run: |
-          python -m venv .venv
+          python3 -m venv .venv
           ./.venv/bin/python -m pip install --upgrade pip
           ./.venv/bin/pip install -r requirements/dev.txt
 
       - name: Node dependencies
         working-directory: apps/web
         run: npm ci
-
-      - name: Playwright diagnostics
-        working-directory: apps/web
-        run: |
-          npx playwright --version
-          df -h / | tail -1
-
-      # Temporary diagnostics: the sandbox this repo was built in cannot read Actions logs,
-      # so a failure is echoed back onto the pull request. Removed once CI is green.
-      - name: Install Chromium
-        working-directory: apps/web
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set +e
-          npx playwright install --with-deps chromium > /tmp/install.log 2>&1
-          code=$?
-          if [ $code -ne 0 ]; then
-            npx playwright install chromium >> /tmp/install.log 2>&1
-            code=$?
-          fi
-          tail -80 /tmp/install.log
-          if [ $code -ne 0 ]; then
-            gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/1/comments" \
-              -f body="$(printf 'playwright install failed (exit %s)\n\n\`\`\`\n%s\n\`\`\`' "$code" "$(tail -40 /tmp/install.log)")" || true
-          fi
-          exit $code
 
       - name: Playwright
         working-directory: apps/web
@@ -153,6 +123,11 @@ jobs:
           CI: "true"
           FORECASTOPS_PYTHON: ${{ github.workspace }}/.venv/bin/python
           FORECASTOPS_ALEMBIC: ${{ github.workspace }}/.venv/bin/alembic
+
+      - name: Echo the report tail on failure
+        if: failure()
+        working-directory: apps/web
+        run: tail -n 120 playwright-report/index.html 2>/dev/null || true
 
       - name: Upload Playwright report
         if: failure()
