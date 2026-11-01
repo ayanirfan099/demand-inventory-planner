@@ -165,7 +165,7 @@ data/datasets/{org_id}/{dataset_id}/v{n}-{fingerprint12}.csv
 | Redis down (`rq` mode) | Job fails fast with `queue_unavailable` + alert; reads continue working |
 | Worker dies mid-job | The poller's startup sweep marks `running` claims older than the budget + 60 s as `failed` (`worker_error`) with one audit event and one alert; retry is an explicit user action, never automatic |
 | Timeout | Progress callback aborts the study, job fails with `timeout`, partial results are not persisted |
-| Database down | `/readyz` → 503; API returns 503 `service_unavailable`; no partial writes |
+| Database down | `/readyz` → 503; data endpoints return 503 `service_unavailable` with no driver detail in the body (the session lookup is the first query, so an unauthenticated request still gets 401); covered by `tests/test_resilience.py` |
 | Dataset file missing | Job fails with `dataset_unavailable` (never an empty forecast) |
 | Invalid upload | Rejected with row-level reasons; nothing committed |
 | Stale preview | `preview_expired`, user re-uploads |

@@ -82,7 +82,7 @@ a cleanup job exists that this repository does not ship.
 
 | Symptom | Meaning | Action |
 | --- | --- | --- |
-| `/readyz` 503 with `database: error` | DB unreachable | Check `FORECASTOPS_DATABASE_URL`, DB health, credentials |
+| `/readyz` 503 with `database: error`, data endpoints 503 `service_unavailable` | DB unreachable (the API maps driver outages to 503, never 500) | Check `FORECASTOPS_DATABASE_URL`, DB health, credentials |
 | `/readyz` 200 with `queue.degraded` | Redis unreachable, API still serving | Jobs will fail with `queue_unavailable` until Redis returns |
 | Jobs stuck `running` | Worker died mid-job | `sweep_stale_claims()` on poller start fails claims older than the budget + 60 s with `worker_error` and raises an alert; retry the job explicitly |
 | `413` on upload | Over 5 MiB | Raise the limit consciously, or split by store |

@@ -11,6 +11,7 @@ import logging
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import InterfaceError, OperationalError
 
 from .observability import get_request_id
 
@@ -100,6 +101,25 @@ def register_exception_handlers(app: FastAPI) -> None:
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             content=error_body("validation_error", "Some fields are invalid.", details=details),
+        )
+
+    @app.exception_handler(OperationalError)
+    @app.exception_handler(InterfaceError)
+    async def _database_unavailable(_request: Request, exc: Exception) -> JSONResponse:
+        """A database outage is a 503, not a 500.
+
+        The distinction matters operationally: 503 means "retry shortly, the process is
+        healthy", which is exactly true when the connection pool cannot reach Postgres. The
+        message never includes the driver error, which can contain hostnames and credentials.
+        """
+
+        logger.error("database unavailable: %s", type(exc).__name__)
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=error_body(
+                "service_unavailable",
+                "The database is unavailable. Try again shortly.",
+            ),
         )
 
     @app.exception_handler(Exception)

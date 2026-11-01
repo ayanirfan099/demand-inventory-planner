@@ -26,6 +26,7 @@ and no real business data.**
 | Four derived alert rules with acknowledgement | `/alerts` |
 | Forecast / metrics CSV, JSON report, and an export registry | `/audit`, `GET /api/v1/forecast-runs/{id}/exports/report.json` |
 | Org-scoped authN/authZ with owner / analyst / viewer roles | `services/api/app/deps.py` |
+| A database outage returns 503 (not 500) without leaking driver details | `app/errors.py`, `tests/test_resilience.py` |
 | Audit log of every consequential action | `/audit` |
 
 ## Architecture at a glance
@@ -199,7 +200,7 @@ All of the following was run in this workspace (Python 3.11, Node 20):
 | --- | --- |
 | `pytest packages/forecasting/tests -q` | 43 passed |
 | `pytest packages/contracts/tests -q` | 10 passed (contract + OpenAPI drift) |
-| `pytest tests -q` (API integration + worker) | 81 passed (~50 s) |
+| `pytest tests -q` (API integration + worker + resilience) | 86 passed (~45 s) |
 | `ruff check .` | All checks passed |
 | `mypy services/api/app packages/forecasting/src services/worker/worker packages/contracts/src` | Success: no issues in 41 source files |
 | `npx tsc --noEmit` (apps/web) | clean |
@@ -217,8 +218,10 @@ Known gaps, stated plainly:
   page *content* is fetched client-side after the session resolves, so no rendered data view
   has been visually checked here. The Playwright suite in CI is what closes that gap.
 - The Docker images have not been built here (no daemon available).
-- Redis/RQ mode has not been exercised against a live Redis; only the `thread` and
-  `external` (DB poller) paths are covered by tests.
+- No test talks to a live Redis. The `rq` dispatch path is covered with a recording queue
+  (correct job id, queue name, timeout and description) and with a refusing queue (job marked
+  `queue_unavailable`), but a real enqueue/worker round-trip has not run here. The `thread`
+  and `external` (DB poller) paths are exercised for real.
 
 ## Milestones
 
