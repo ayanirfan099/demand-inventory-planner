@@ -1,0 +1,60 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node.js
+node_modules/
+.next/
+.nuxt/
+dist/
+build/
+out/
+coverage/
+.npm/
+.pnpm-store/
+.yarn/
+*.tsbuildinfo
+
+# Testing
+test-results/
+playwright-report/
+blob-report/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+
+# Databases and local state
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+data/local/
+uploads/
+
+# Logs
+*.log
+logs/
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
