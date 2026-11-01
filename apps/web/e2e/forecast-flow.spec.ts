@@ -18,7 +18,10 @@ test.describe("forecast workflow", () => {
 
     await expect(page.getByRole("heading", { name: /review the validation report/i })).toBeVisible();
     // The validator must report series count and accepted rows before anything is saved.
-    await expect(page.getByText(/4\b.*store × item combinations/)).toBeVisible();
+    // The KPI renders the count and the hint in sibling elements, so assert on the card.
+    const seriesKpi = page.locator(".kpi").filter({ hasText: "store × item combinations" });
+    await expect(seriesKpi).toBeVisible();
+    await expect(seriesKpi.locator(".kpi-value")).toHaveText("4");
     await expect(page.getByText(/no data-quality warnings/i)).toBeVisible();
 
     await page.getByLabel("Dataset name").fill("E2E demand");
