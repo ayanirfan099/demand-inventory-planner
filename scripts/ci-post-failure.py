@@ -52,7 +52,9 @@ def main() -> int:
             "User-Agent": "forecastops-ci",
         },
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
+    # The URL is built from the GitHub-provided repository name, so the scheme is not
+    # attacker-controlled; the audit warning is suppressed for that reason.
+    with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
         print("comment posted:", response.status)
     return 0
 
