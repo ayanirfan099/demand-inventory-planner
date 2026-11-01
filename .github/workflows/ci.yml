@@ -2,7 +2,6 @@ name: CI
 
 permissions:
   contents: read
-  issues: write
 
 on:
   push:
@@ -127,14 +126,11 @@ jobs:
           set -o pipefail
           npx playwright test 2>&1 | tee /tmp/pw.log
 
-      # Actions logs are unreachable from some development sandboxes; the GitHub API is not.
-      # Echo the failure tail onto the pull request so it can be debugged from anywhere.
-      - name: Post failure tail to the pull request
-        if: failure() && github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: python3 scripts/ci-post-failure.py /tmp/pw.log
+      # Actions logs are unreachable from some development sandboxes. An annotation is
+      # readable through the checks API from anywhere, so the failure tail goes there.
+      - name: Annotate the failure tail
+        if: failure()
+        run: python3 scripts/ci-echo-failure.py /tmp/pw.log
 
       - name: Echo the report tail on failure
         if: failure()
