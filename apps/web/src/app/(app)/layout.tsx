@@ -21,6 +21,13 @@ function Guard({ children }: { children: React.ReactNode }) {
     return (
       <main className="content" style={{ paddingTop: "3rem" }}>
         <Loading label="Checking your session" />
+        <noscript>
+          <p className="chart-insight">
+            ForecastOps needs JavaScript: the planning views load your data after the session is
+            confirmed. Enable JavaScript to sign in. The REST API at <code>/api/v1</code> works
+            without it.
+          </p>
+        </noscript>
       </main>
     );
   }

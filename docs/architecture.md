@@ -140,9 +140,12 @@ data/datasets/{org_id}/{dataset_id}/v{n}-{fingerprint12}.csv
 ## 7. Frontend architecture
 
 - Next.js App Router with a route group `(app)` for the authenticated shell and a
-  standalone `/login`.
-- Server components fetch through the internal proxy; client components handle
-  interaction (upload, job launch, filters, acknowledge, export).
+  standalone `/login`. Only `/` is a server component (a redirect to `/dashboard`).
+- The shell is a client component: it resolves the session via `/api/v1/auth/me`, bounces to
+  `/login` on 401, then renders navigation filtered by role. Each page fetches its own data
+  through the same-origin `/api/*` proxy, so cookies stay first-party and there is exactly one
+  data-access path. Trade-off: a loading state and a JavaScript requirement for the UI, stated
+  in a `<noscript>` notice; the REST API is usable without a browser.
 - `SessionProvider` holds the current user/org/role for the shell; a 401 anywhere bounces
   to `/login?next=…`.
 - Charts are Recharts components wrapped by `charts.tsx`, which always renders a

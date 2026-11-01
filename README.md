@@ -48,7 +48,10 @@ and no real business data.**
 
 The web app never talks to the API host directly from the browser: `next.config.mjs`
 proxies `/api/*` (and `/healthz`) to the API origin, so the browser only ever sees one
-origin and the session cookie stays first-party.
+origin and the session cookie stays first-party. The authenticated shell is client-rendered:
+it confirms the session with `/api/v1/auth/me`, then each page loads its data through the
+same proxy. That keeps cookies first-party and one code path for every view, at the cost of a
+loading state and a JavaScript requirement for the UI (the REST API itself does not need it).
 
 - **Why RQ rather than Celery** and the other decisions: [`docs/adr/`](docs/adr).
 - **Forecasting protocol, metrics, zero-demand behaviour:** [`docs/methodology.md`](docs/methodology.md).
@@ -205,7 +208,9 @@ All of the following was run in this workspace (Python 3.11, Node 20):
 Known gaps, stated plainly:
 
 - Browser end-to-end tests exist (`apps/web/e2e/`) but have never been executed in this
-  environment; only server-rendered HTML and the HTTP proxy were verified with `curl`.
+  environment. `curl` verified page shells, the Next→API proxy and every API endpoint, but
+  page *content* is fetched client-side after the session resolves, so no rendered data view
+  has been visually checked here. The Playwright suite in CI is what closes that gap.
 - The Docker images have not been built here (no daemon available).
 - Redis/RQ mode has not been exercised against a live Redis; only the `thread` and
   `external` (DB poller) paths are covered by tests.
