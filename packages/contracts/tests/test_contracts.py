@@ -7,6 +7,7 @@ worse than no constant, so each value here is checked against the module that en
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from app.config import Settings
@@ -112,3 +113,13 @@ def test_alert_rule_keys_are_the_dedupe_key_prefixes():
     source = (REPO_ROOT / "services" / "api" / "app" / "services" / "alerts.py").read_text(encoding="utf-8")
     for rule in ALERT_RULE_KEYS:
         assert f'f"{rule}:' in source, f"alert rule {rule!r} has no dedupe key {rule}:… in alerts.py"
+
+
+def test_the_openapi_snapshot_matches_the_app():
+    """packages/contracts/openapi.json is what reviewers and clients read offline."""
+
+    from app.main import create_app
+
+    committed = json.loads((REPO_ROOT / "packages" / "contracts" / "openapi.json").read_text(encoding="utf-8"))
+    current = json.loads(json.dumps(create_app().openapi(), sort_keys=True))
+    assert committed == current, "openapi.json is stale; run scripts/export-openapi.py"

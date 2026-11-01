@@ -84,7 +84,7 @@ a cleanup job exists that this repository does not ship.
 | --- | --- | --- |
 | `/readyz` 503 with `database: error` | DB unreachable | Check `FORECASTOPS_DATABASE_URL`, DB health, credentials |
 | `/readyz` 200 with `queue.degraded` | Redis unreachable, API still serving | Jobs will fail with `queue_unavailable` until Redis returns |
-| Jobs stuck `running` | Worker died mid-job | Poller re-claims stale claims on start; otherwise retry the job explicitly |
+| Jobs stuck `running` | Worker died mid-job | `sweep_stale_claims()` on poller start fails claims older than the budget + 60 s with `worker_error` and raises an alert; retry the job explicitly |
 | `413` on upload | Over 5 MiB | Raise the limit consciously, or split by store |
 | `invalid_dataset` with row numbers | Contract violation | Fix the file; nothing was imported |
 | `insufficient_history` | Dataset shorter than holdout + 15 days | Shorten holdout or upload more history |
@@ -96,7 +96,8 @@ a cleanup job exists that this repository does not ship.
 1. `docker compose -f infra/docker-compose.yml ps` — confirm `db` and `redis` are healthy.
 2. `docker compose ... restart api` — the API applies migrations, sweeps previews, then
    serves traffic. `/healthz` is live immediately; `/readyz` follows the DB.
-3. `docker compose ... restart worker` — the poller sweeps stale claims on start.
+3. `docker compose ... restart worker` — the poller fails abandoned claims (budget + 60 s) on
+   start, each with one alert, so nothing sits in `running` forever.
 4. Check `GET /api/v1/forecast-jobs?status=failed` for jobs that failed during the outage.
 
 ### Seeding
@@ -113,10 +114,11 @@ database that contains real data.
 | Layer | Command | Notes |
 | --- | --- | --- |
 | Forecasting library | `pytest packages/forecasting/tests -q` | 43 tests, no DB, no network |
-| API integration | `pytest tests -q` | 75 tests, isolated SQLite per test |
+| API integration + worker | `pytest tests -q` | 81 tests, isolated SQLite per test |
 | Lint / types | `ruff check .`, `mypy services/api/app packages/forecasting/src services/worker/worker packages/contracts/src` | |
-| Contract drift | `pytest packages/contracts/tests -q` | 9 tests: limits, metric keys, error codes, alert keys |
-| Web unit | `cd apps/web && npm run typecheck && npm run lint && npm test` | Vitest |
+| Contract drift | `pytest packages/contracts/tests -q` | 10 tests: limits, metric keys, error codes, alert keys, OpenAPI snapshot |
+| Synthetic smoke | `python scripts/smoke_study.py` | Reproducible pipeline run; explicitly not a benchmark (`docs/benchmark.md`) |
+| Web unit | `cd apps/web && npm run typecheck && npm run lint && npm test` | Vitest: 12 tests (formatting, API client) |
 | Web e2e | `cd apps/web && npm run e2e` | Playwright; boots its own API + web on a throwaway SQLite DB |
 
 The e2e script (`scripts/e2e-server.sh`) deletes and recreates `data/e2e/e2e.db`. Never point

@@ -76,7 +76,9 @@ code path.
 | `external` | Nothing is dispatched; the job stays `queued` | Standalone poller worker (`worker.poll`) |
 
 The DB-poller worker claims with a conditional `UPDATE` so two pollers cannot both run the
-same job, sweeps expired previews on start, and exits cleanly on SIGTERM.
+same job, recovers abandoned claims on start (`sweep_stale_claims`), sweeps expired previews,
+and exits cleanly on SIGTERM. Both the claim and the recovery are covered by
+`tests/test_worker_poll.py`.
 
 **Queue failure is visible, not silent.** If Redis is unreachable at enqueue time, the job
 is marked `failed` with `failure_code = "queue_unavailable"`, an alert is raised, and the
@@ -161,7 +163,7 @@ data/datasets/{org_id}/{dataset_id}/v{n}-{fingerprint12}.csv
 | Failure | Behaviour |
 | --- | --- |
 | Redis down (`rq` mode) | Job fails fast with `queue_unavailable` + alert; reads continue working |
-| Worker dies mid-job | Job stays `running`; the poller's startup sweep re-queues claims older than the budget; retry is an explicit user action |
+| Worker dies mid-job | The poller's startup sweep marks `running` claims older than the budget + 60 s as `failed` (`worker_error`) with one audit event and one alert; retry is an explicit user action, never automatic |
 | Timeout | Progress callback aborts the study, job fails with `timeout`, partial results are not persisted |
 | Database down | `/readyz` → 503; API returns 503 `service_unavailable`; no partial writes |
 | Dataset file missing | Job fails with `dataset_unavailable` (never an empty forecast) |

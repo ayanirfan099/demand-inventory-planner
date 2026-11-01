@@ -257,7 +257,8 @@ def _persist_results(job_id: int, result: dict[str, Any], started_at: float) -> 
         alerts.refresh_for_job(db, job)
 
 
-def _fail(job_id: int, code: str, message: str, *, detail: str | None = None) -> None:
+def fail_job(job_id: int, code: str, message: str, *, detail: str | None = None) -> None:
+    """Mark a job failed, recording an audit event and a single alert."""
     with session_scope() as db:
         job = db.get(ForecastJob, job_id)
         if job is None:
@@ -341,18 +342,18 @@ def run_forecast_job(job_id: int) -> None:
         _cancel(job_id)
         logger.info("job cancelled", extra={"context": {"job_id": job_id}})
     except JobTimeout:
-        _fail(
+        fail_job(
             job_id,
             "timeout",
             "The forecast exceeded its time budget and was stopped. Try a shorter horizon or fewer series.",
         )
     except StudyError as exc:
         message = STUDY_ERROR_MESSAGES.get(exc.code, "The forecast could not be completed for this dataset.")
-        _fail(job_id, exc.code, message, detail=str(exc))
+        fail_job(job_id, exc.code, message, detail=str(exc))
     except DemandValidationError as exc:
-        _fail(job_id, "invalid_dataset", "The dataset no longer satisfies the data contract.", detail=str(exc))
+        fail_job(job_id, "invalid_dataset", "The dataset no longer satisfies the data contract.", detail=str(exc))
     except FileNotFoundError:
-        _fail(job_id, "dataset_unavailable", "The stored dataset could not be read. Re-import the data.")
+        fail_job(job_id, "dataset_unavailable", "The stored dataset could not be read. Re-import the data.")
     except Exception:
         logger.exception("unexpected worker failure", extra={"context": {"job_id": job_id}})
-        _fail(job_id, "worker_error", "The forecast failed unexpectedly. The job can be retried.")
+        fail_job(job_id, "worker_error", "The forecast failed unexpectedly. The job can be retried.")

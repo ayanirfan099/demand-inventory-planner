@@ -51,6 +51,9 @@ jobs:
       - name: Contract drift tests
         run: pytest packages/contracts/tests -q
 
+      - name: OpenAPI snapshot is current
+        run: python scripts/export-openapi.py --check
+
       - name: API integration tests
         run: pytest tests -q
 
