@@ -1,5 +1,7 @@
 # ForecastOps — Demand & Inventory Planning
 
+[![CI](https://github.com/ayanirfan099/demand-inventory-planner/actions/workflows/ci.yml/badge.svg)](https://github.com/ayanirfan099/demand-inventory-planner/actions/workflows/ci.yml)
+
 A full-stack demand forecasting and inventory planning workspace: validated CSV ingestion,
 bounded asynchronous forecast jobs, an honest seasonal-naive baseline next to one documented
 ML model, forecast-vs-actual evaluation, and reorder suggestions whose formula and
@@ -56,6 +58,7 @@ loading state and a JavaScript requirement for the UI (the REST API itself does 
 - **Why RQ rather than Celery** and the other decisions: [`docs/adr/`](docs/adr).
 - **Forecasting protocol, metrics, zero-demand behaviour:** [`docs/methodology.md`](docs/methodology.md).
 - **Components, request flow, failure modes, security:** [`docs/architecture.md`](docs/architecture.md).
+- **The synthetic smoke run and how (not) to read it:** [`docs/benchmark.md`](docs/benchmark.md).
 - **Limits, retention, runbook, configuration:** [`docs/operations.md`](docs/operations.md).
 
 ## Repository layout
@@ -65,7 +68,7 @@ apps/web/                 Next.js 15 app (App Router, TypeScript, Recharts)
 services/api/             FastAPI app, SQLAlchemy models, Alembic migrations, seed script
 services/worker/          RQ worker (Redis) and standalone DB-poller worker
 packages/forecasting/     Pure forecasting/evaluation library (no web or DB imports)
-packages/contracts/       Shared contract constants + drift tests against the real code
+packages/contracts/       Shared contract constants, OpenAPI snapshot, drift tests
 infra/                    Dockerfiles and docker-compose.yml
 docs/                     Methodology, architecture, operations, ADRs
 scripts/                  e2e server bootstrapper
@@ -195,14 +198,16 @@ All of the following was run in this workspace (Python 3.11, Node 20):
 | Command | Result |
 | --- | --- |
 | `pytest packages/forecasting/tests -q` | 43 passed |
-| `pytest packages/contracts/tests -q` | 9 passed (contract drift) |
-| `pytest tests -q` (API integration) | 75 passed (~43 s) |
+| `pytest packages/contracts/tests -q` | 10 passed (contract + OpenAPI drift) |
+| `pytest tests -q` (API integration + worker) | 81 passed (~50 s) |
 | `ruff check .` | All checks passed |
 | `mypy services/api/app packages/forecasting/src services/worker/worker packages/contracts/src` | Success: no issues in 41 source files |
 | `npx tsc --noEmit` (apps/web) | clean |
 | `npx next lint` (apps/web) | no warnings or errors |
-| `npx vitest run` (apps/web) | 6 passed |
+| `npx vitest run` (apps/web) | 12 passed (formatting + API client) |
 | `npx next build` (apps/web) | success, 12 routes |
+| `python scripts/export-openapi.py --check` | snapshot current (45 paths) |
+| `python scripts/smoke_study.py` | 12 series, 2 models, ~4 s (synthetic smoke; see [`docs/benchmark.md`](docs/benchmark.md)) |
 | `npx playwright test` | **not executed here** — Chromium cannot be downloaded in this sandbox; the suite runs in CI |
 
 Known gaps, stated plainly:

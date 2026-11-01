@@ -32,6 +32,7 @@ recover work.
 | Defaults | one queue, small API, easy to read | many features we would not use |
 | Result storage | we already store results in Postgres | would add a second result store |
 | Failure visibility | job registry + our own status column | more knobs, more ways to misconfigure |
+| Crash recovery | one conditional UPDATE in the poller, tested | worker-lost handling is configuration |
 | Fit for a single job type | excellent | acceptable but heavier |
 
 There is exactly one kind of asynchronous task. Celery's routing, chords, chaining and
@@ -46,6 +47,9 @@ beat scheduler would be unused surface area that still has to be operated.
   is not.
 - RQ gives us per-job `job_timeout`, which maps onto the same 300 s budget the runner
   enforces independently (so a hung process is still bounded).
+- A claim abandoned by a dead worker is **failed**, not silently re-queued: the sweep in
+  `worker.poll` transitions it with a conditional UPDATE, writes one audit event and raises
+  one alert. Re-running work that may have produced side effects stays a human decision.
 - If we later need scheduled/periodic workloads, Celery beat or a cron entry becomes more
   attractive; the DB-outbox shape of the job table makes that a transport change, not a
   redesign.

@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["packages/forecasting/tests", "packages/contracts/tests", "tests"]
-pythonpath = [".", "services/api", "packages/forecasting/src", "packages/contracts/src"]
+pythonpath = [".", "services/api", "services/worker", "packages/forecasting/src", "packages/contracts/src"]
 addopts = "-q --strict-markers"
 filterwarnings = [
   "error::DeprecationWarning:app.*",
