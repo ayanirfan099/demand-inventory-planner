@@ -50,7 +50,7 @@ test.describe("forecast workflow", () => {
 
     // Switching to the forward view must plot the planning horizon with its band.
     await page.getByRole("button", { name: "Forward" }).click();
-    await expect(page.getByText(/Forward plan for the next/i)).toBeVisible();
+    await expect(page.locator(".chart-insight").filter({ hasText: /Forward plan for the next/i })).toBeVisible();
 
     // Filtering to a single series must change the chart summary text.
     await page.getByRole("button", { name: "Holdout" }).click();
@@ -72,11 +72,11 @@ test.describe("forecast workflow", () => {
     await page.getByLabel(/minimum order quantity/i).fill("12");
     await page.getByLabel(/pack size/i).fill("6");
     await page.getByRole("button", { name: /create policy/i }).click();
-    await expect(page.getByText(/policy "E2E weekly review" created/i)).toBeVisible();
+    await expect(page.getByText(/policy "E2E weekly review" created/i).first()).toBeVisible();
 
     await page.getByRole("button", { name: /generate suggestions/i }).click();
-    await expect(page.getByText(/generated \d+ suggestions/i)).toBeVisible();
-    await expect(page.getByRole("table").filter({ hasText: /reorder point/i })).toBeVisible();
+    await expect(page.getByText(/generated \d+ suggestions/i).first()).toBeVisible();
+    await expect(page.getByRole("table").filter({ hasText: /reorder point/i }).first()).toBeVisible();
     await expect(page.getByText(/decision support, not purchasing/i).first()).toBeVisible();
 
     // --- Alerts reflect the generated exposure --------------------------------------
