@@ -1,0 +1,4 @@
+# API runtime plus the Redis/RQ extras (Docker Compose / production path).
+# Install from the repository root:  pip install -r requirements/api-queue.txt
+-r api.txt
+-e ./services/api[queue]

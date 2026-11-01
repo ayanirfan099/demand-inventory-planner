@@ -1,0 +1,5 @@
+# Background worker (RQ on Redis). Includes the API package because the worker calls
+# app.services.runner.run_forecast_job directly.
+# Install from the repository root:  pip install -r requirements/worker.txt
+-r api-queue.txt
+-e ./services/worker
