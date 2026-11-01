@@ -1,0 +1,15 @@
+.git
+.venv
+node_modules
+**/node_modules
+.next
+**/.next
+data
+coverage
+test-results
+playwright-report
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache

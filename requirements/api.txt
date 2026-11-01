@@ -1,0 +1,9 @@
+# Runtime dependencies for the API + forecasting library.
+# Install from the repository root:  pip install -r requirements/api.txt
+#
+# The pyproject files are authoritative (packaging metadata, extras, package discovery).
+# This file exists so a reviewer or a CI job can install the runtime in one command.
+
+-e ./packages/forecasting
+-e ./packages/contracts
+-e ./services/api

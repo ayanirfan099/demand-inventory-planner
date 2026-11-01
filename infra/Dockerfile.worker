@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+COPY packages/forecasting /app/packages/forecasting
+COPY services/api /app/services/api
+COPY services/worker /app/services/worker
+
+RUN pip install --upgrade pip \
+    && pip install /app/packages/forecasting \
+    && pip install "/app/services/api[queue]" \
+    && pip install /app/services/worker
+
+ENV PYTHONPATH=/app/services/api:/app/services/worker \
+    FORECASTOPS_DATA_DIR=/data \
+    FORECASTOPS_EXECUTION_MODE=rq
+
+CMD ["python", "-m", "worker.main"]
