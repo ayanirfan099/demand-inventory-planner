@@ -118,13 +118,18 @@ jobs:
 
       - name: Playwright
         working-directory: apps/web
+        shell: bash
         env:
           CI: "true"
           FORECASTOPS_PYTHON: ${{ github.workspace }}/.venv/bin/python
           FORECASTOPS_ALEMBIC: ${{ github.workspace }}/.venv/bin/alembic
+        # Capture the output to a file unconditionally: the annotation step reads it, and a
+        # pipe into tee would hide the exit status in a non-bash shell.
         run: |
-          set -o pipefail
-          npx playwright test 2>&1 | tee /tmp/pw.log
+          npx playwright test > /tmp/pw.log 2>&1
+          status=$?
+          tail -n 200 /tmp/pw.log
+          exit $status
 
       # Actions logs are unreachable from some development sandboxes. An annotation is
       # readable through the checks API from anywhere, so the failure tail goes there.
