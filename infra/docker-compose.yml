@@ -1,0 +1,91 @@
+# Local, self-contained ForecastOps stack: PostgreSQL + Redis + API + RQ worker + web.
+#
+#   cp .env.example .env
+#   docker compose -f infra/docker-compose.yml up --build
+#   docker compose -f infra/docker-compose.yml exec api python scripts/seed_demo.py
+#
+# The seed step is deliberate: nothing is auto-created on startup, so an empty database
+# is an explicit, visible state rather than a hidden side effect.
+
+name: forecastops
+
+x-api-env: &api-env
+  FORECASTOPS_ENVIRONMENT: production
+  FORECASTOPS_DATABASE_URL: postgresql+psycopg://forecastops:${POSTGRES_PASSWORD:-forecastops-dev}@db:5432/forecastops
+  FORECASTOPS_DATA_DIR: /data
+  FORECASTOPS_REDIS_URL: redis://redis:6379/0
+  FORECASTOPS_EXECUTION_MODE: rq
+  FORECASTOPS_COOKIE_SECURE: ${FORECASTOPS_COOKIE_SECURE:-false}
+  FORECASTOPS_ALLOWED_ORIGINS: ${FORECASTOPS_ALLOWED_ORIGINS:-http://localhost:3000}
+  FORECASTOPS_DEMO_PASSWORD: ${FORECASTOPS_DEMO_PASSWORD:-planning-demo-2024}
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: forecastops
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-forecastops-dev}
+      POSTGRES_DB: forecastops
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forecastops -d forecastops"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    environment: *api-env
+    volumes:
+      - data:/data
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.worker
+    environment: *api-env
+    volumes:
+      - data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    stop_grace_period: 30s
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+    environment:
+      FORECASTOPS_API_ORIGIN: http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  db-data:
+  redis-data:
+  data:

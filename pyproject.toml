@@ -1,0 +1,36 @@
+[project]
+name = "forecastops-workspace"
+version = "0.1.0"
+description = "ForecastOps monorepo tooling configuration (not an installable package)."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["packages/forecasting/tests", "packages/contracts/tests", "tests"]
+pythonpath = [".", "services/api", "packages/forecasting/src", "packages/contracts/src"]
+addopts = "-q --strict-markers"
+filterwarnings = [
+  "error::DeprecationWarning:app.*",
+  "ignore::DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["node_modules", ".venv", "apps/web/.next", "services/api/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "C4", "SIM", "ARG", "RUF"]
+ignore = ["S101", "B008", "RUF001", "RUF002", "RUF003", "SIM108"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "ARG001", "ARG002", "S608"]
+"packages/forecasting/tests/**" = ["S105", "ARG001"]
+"services/api/app/routers/datasets.py" = ["S608"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+ignore_missing_imports = true
+check_untyped_defs = true
+exclude = ["apps/web", "services/api/migrations", "node_modules", "\\.venv"]

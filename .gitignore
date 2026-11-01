@@ -58,3 +58,6 @@ tmp/
 temp/
 *.tmp
 *.swp
+
+# Local e2e runtime data
+data/e2e/
