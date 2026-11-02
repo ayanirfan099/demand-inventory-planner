@@ -182,5 +182,9 @@ data/datasets/{org_id}/{dataset_id}/v{n}-{fingerprint12}.csv
 migrations on start), an RQ worker and the Next.js app, with a shared `data` volume. Health
 checks gate startup. Seeding is an explicit one-off command, never a startup side effect.
 
+CI builds all three images, validates the compose file, and starts the API image for real: it
+must migrate, then answer `/healthz` and `/readyz`. The live queue is exercised against a Redis
+7 service container. Neither is claimed on the strength of a code review.
+
 See [`operations.md`](operations.md) for limits, retention, backups and the runbook, and
 [`adr/`](adr) for the decisions behind these choices.

@@ -120,6 +120,8 @@ database that contains real data.
 | Synthetic smoke | `python scripts/smoke_study.py` | Reproducible pipeline run; explicitly not a benchmark (`docs/benchmark.md`) |
 | Web unit | `cd apps/web && npm run typecheck && npm run lint && npm test` | Vitest: 18 tests (formatting, API client, WCAG contrast of the palette tokens) |
 | Web e2e | `cd apps/web && npm run e2e` | Playwright; boots its own API + web on a throwaway SQLite DB |
+| Live queue | `pytest tests/test_queue_redis.py` | Needs `FORECASTOPS_REDIS_URL`; skips without a broker. CI runs it against a Redis 7 service |
+| Containers | `docker compose -f infra/docker-compose.yml config`, `docker build …` | CI builds all three images and health-checks the API container |
 
 The e2e script (`scripts/e2e-server.sh`) deletes and recreates `data/e2e/e2e.db`. Never point
 it at a database you care about. Screenshots for documentation:

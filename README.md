@@ -114,9 +114,10 @@ Services: `db` (Postgres 16), `redis` (7), `api`, `worker`, `web`. The API conta
 `alembic upgrade head` before starting. Seeding is deliberately *not* automatic, so a
 restart never mutates demo data.
 
-> The Docker artifacts were written against the same code paths the tests exercise, but
-> this sandbox has no Docker daemon — they have not been built here. Treat them as
-> reviewed-but-unbuilt until CI builds them.
+The images and the compose file are built and checked in CI (`Containers — build images and
+validate compose`): `docker compose config` is validated, all three images are built, and the
+API image is started for real — it applies Alembic migrations, then `/healthz` and `/readyz`
+must answer. That job is the reason this section is a claim rather than a hope.
 
 ## Data contract
 
@@ -209,7 +210,9 @@ All of the following was run in this workspace (Python 3.11, Node 20):
 | `npx next build` (apps/web) | success, 12 routes |
 | `python scripts/export-openapi.py --check` | snapshot current (45 paths) |
 | `python scripts/smoke_study.py` | 12 series, 2 models, ~4 s (synthetic smoke; see [`docs/benchmark.md`](docs/benchmark.md)) |
-| `npx playwright test` | **not executed here** — Chromium cannot be downloaded in this sandbox; the suite runs in CI |
+| `pytest tests/test_queue_redis.py -q` | 2 skipped here (no broker); **passes in CI against a real Redis 7 service** |
+| `docker compose config` + 3 image builds + API container health | **CI only** (`Containers` job) — no Docker daemon in this sandbox |
+| `npx playwright test` | **not executed here** — Chromium cannot be downloaded in this sandbox; green in CI |
 
 Known gaps, stated plainly:
 
@@ -217,11 +220,13 @@ Known gaps, stated plainly:
   environment. `curl` verified page shells, the Next→API proxy and every API endpoint, but
   page *content* is fetched client-side after the session resolves, so no rendered data view
   has been visually checked here. The Playwright suite in CI is what closes that gap.
-- The Docker images have not been built here (no daemon available).
-- No test talks to a live Redis. The `rq` dispatch path is covered with a recording queue
-  (correct job id, queue name, timeout and description) and with a refusing queue (job marked
-  `queue_unavailable`), but a real enqueue/worker round-trip has not run here. The `thread`
-  and `external` (DB poller) paths are exercised for real.
+- Docker and the live queue are verified in CI, not here: this sandbox has no Docker daemon
+  and no Redis. Locally the `rq` dispatch contract is covered with a recording queue (job id,
+  queue name, timeout, description) and a refusing queue (`queue_unavailable`); in CI the same
+  job round-trips through a real Redis 7 broker and an RQ worker in burst mode, and the image
+  build plus API container health checks run for real.
+- `tests/test_queue_redis.py` skips when no broker answers, so a laptop without Redis reports
+  "skipped" rather than a false pass.
 
 ## Milestones
 

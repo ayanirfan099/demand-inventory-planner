@@ -45,10 +45,11 @@ beat scheduler would be unused surface area that still has to be operated.
 - Dispatch failures are explicit: unreachable Redis marks the job `failed` with
   `queue_unavailable` and raises an alert. The API never reports a job as scheduled when it
   is not.
-- The dispatch contract is tested without Redis: a recording queue asserts the job id, queue
-  name, `job_timeout` and description; a refusing queue asserts the failure path. What is not
-  tested here is a real Redis round-trip, and that is stated in the README rather than
-  implied.
+- The dispatch contract is tested without Redis (recording queue: job id, queue name,
+  `job_timeout`, description; refusing queue: `queue_unavailable`), and the real thing is
+  tested with Redis: `tests/test_queue_redis.py` enqueues through `dispatch`, runs an RQ
+  worker in burst mode and asserts the run landed in the database. CI provides Redis 7 as a
+  service container; the file skips cleanly where no broker exists.
 - RQ gives us per-job `job_timeout`, which maps onto the same 300 s budget the runner
   enforces independently (so a hung process is still bounded).
 - A claim abandoned by a dead worker is **failed**, not silently re-queued: the sweep in
