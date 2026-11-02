@@ -16,9 +16,9 @@ import os
 
 import pytest
 import redis as redis_client
-
 from app.db import SessionLocal
 from app.models import ForecastJob
+
 from tests.helpers import create_job, run_ids
 
 REDIS_URL = os.environ.get("FORECASTOPS_REDIS_URL", "redis://127.0.0.1:6379/0")
@@ -31,7 +31,7 @@ def _connect():
         )
         connection.ping()
         return connection
-    except Exception:  # noqa: BLE001 - any failure means "no broker here"
+    except Exception:  # any failure means "no broker here"
         return None
 
 
