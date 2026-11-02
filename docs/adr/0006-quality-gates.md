@@ -21,6 +21,7 @@ regressions rather than for flaky infrastructure.
 | Integration | `pytest tests` | API against isolated SQLite |
 | Unit | `vitest run` | formatting/helpers |
 | Browser | `playwright test` | login → upload → job → run → planning |
+| Accessibility | `@axe-core/playwright` (same job) | login, every page, and the data-dense screens once real data exists |
 
 Rules:
 
@@ -36,6 +37,9 @@ Rules:
 - Mypy flagged 33 real issues when first introduced (Optional arithmetic, `Sequence` vs
   `list`, variable reuse between frames and lists, `.rowcount` on the wrong result type).
   All were fixed in code, not suppressed.
+- The accessibility gate earned its place immediately: its first run reported a
+  `scrollable-region-focusable` failure on a table wrapper, and the token audit behind it found
+  a "large text only" ink used at 11-13px. Both were fixed in code.
 - Playwright needs a Chromium download, which is impossible in the restricted sandbox used
   for development; the suite therefore runs in CI and locally, and the README says plainly
   that it has not executed in that sandbox.

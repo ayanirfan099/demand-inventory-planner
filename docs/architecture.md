@@ -157,12 +157,26 @@ data/datasets/{org_id}/{dataset_id}/v{n}-{fingerprint12}.csv
 - Design: light neutral canvas, dense tabular layouts, blue/teal accents — an admin tool,
   not a marketing page. All motion respects `prefers-reduced-motion`; focus states are
   visible; every control is reachable by keyboard.
-- Accessibility is asserted, not assumed: `apps/web/tests/contrast.test.ts` reads the palette
-  tokens out of `globals.css` and fails when a text/background pair drops below WCAG AA
-  (4.5:1, or 3:1 for large text). Finding real failures is the point — the first run caught
-  teal badges at 4.22:1, amber badges at 4.15:1, muted ink at 4.48:1 on the deepest canvas
-  and faint ink at 2.72:1, all of which were darkened to pass. There is no automated axe audit;
-  the claim here is contrast plus keyboard-first markup plus textual chart equivalents, no more.
+- Accessibility is asserted twice, from two directions.
+  1. **Tokens** — `apps/web/tests/contrast.test.ts` reads the palette out of `globals.css` and
+     fails when a text/background pair drops below WCAG AA. Finding real failures is the point:
+     the first run caught teal badges at 4.22:1, amber badges at 4.15:1, muted ink at 4.48:1 and
+     faint ink at 2.72:1, all darkened to pass.
+  2. **Rendered pages** — `apps/web/e2e/accessibility.spec.ts` runs axe-core (WCAG 2.1 A/AA)
+     against the login screen and all seven signed-in pages, after the client-side fetch settles
+     so a loading skeleton cannot pass for a page; `forecast-flow.spec.ts` audits the screens
+     that only exist once data is real — run detail, planning with reorder rows, alerts and
+     datasets. A failing rule prints its id, impact, selector and expectation.
+
+  The audit has already paid for itself twice. It caught the faint-ink token used for 11–13px
+  captions and chart axis ticks (3.45:1 — the old token was documented as "large text only",
+  which the usage ignored; now 4.56:1 worst case), and it caught every table wrapper being a
+  horizontal scroll region with no keyboard route to the hidden columns (`scrollable-region-
+  focusable`). All 13 wrappers are now labelled `region`s with `tabIndex={0}`, so arrow keys
+  scroll them and the existing `:focus-visible` ring shows where focus went.
+
+  What is still not claimed: screen-reader usability testing with a real user, and automated
+  checks for motion or reading order beyond what axe encodes.
 
 ## 8. Failure behaviour
 
