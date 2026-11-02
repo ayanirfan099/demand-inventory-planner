@@ -14,7 +14,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-MAX_CHARS = 4000
+MAX_CHARS = 14000  # enough for a first attempt *and* its retry
 
 
 def main() -> int:

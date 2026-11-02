@@ -10,8 +10,8 @@
   --surface-raised: #ffffff;
   --ink: #12202e;
   --ink-soft: #33475b;
-  --ink-muted: #5d7186;
-  --ink-faint: #8296a8;
+  --ink-muted: #566a7f;   /* >= 4.96:1 on every surface token */
+  --ink-faint: #6f8496;  /* 3.2:1 on canvas-deep: large/secondary text only */
   --line: #dde5ee;
   --line-strong: #c6d2df;
 
@@ -19,10 +19,10 @@
   --blue-600: #125c9e;
   --blue-500: #1a76c9;
   --blue-100: #e3effb;
-  --teal-600: #0d7f76;
+  --teal-600: #0b6f68;   /* 5.23:1 on teal-100, 6.0:1 on white */
   --teal-500: #12968b;
   --teal-100: #dff3f1;
-  --amber-600: #a86408;
+  --amber-600: #8f5606;  /* 5.32:1 on amber-100 */
   --amber-100: #fdf0d8;
   --red-600: #ad2f26;
   --red-100: #fde8e6;

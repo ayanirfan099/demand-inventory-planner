@@ -157,6 +157,12 @@ data/datasets/{org_id}/{dataset_id}/v{n}-{fingerprint12}.csv
 - Design: light neutral canvas, dense tabular layouts, blue/teal accents — an admin tool,
   not a marketing page. All motion respects `prefers-reduced-motion`; focus states are
   visible; every control is reachable by keyboard.
+- Accessibility is asserted, not assumed: `apps/web/tests/contrast.test.ts` reads the palette
+  tokens out of `globals.css` and fails when a text/background pair drops below WCAG AA
+  (4.5:1, or 3:1 for large text). Finding real failures is the point — the first run caught
+  teal badges at 4.22:1, amber badges at 4.15:1, muted ink at 4.48:1 on the deepest canvas
+  and faint ink at 2.72:1, all of which were darkened to pass. There is no automated axe audit;
+  the claim here is contrast plus keyboard-first markup plus textual chart equivalents, no more.
 
 ## 8. Failure behaviour
 
@@ -165,7 +171,7 @@ data/datasets/{org_id}/{dataset_id}/v{n}-{fingerprint12}.csv
 | Redis down (`rq` mode) | Job fails fast with `queue_unavailable` + alert; reads continue working |
 | Worker dies mid-job | The poller's startup sweep marks `running` claims older than the budget + 60 s as `failed` (`worker_error`) with one audit event and one alert; retry is an explicit user action, never automatic |
 | Timeout | Progress callback aborts the study, job fails with `timeout`, partial results are not persisted |
-| Database down | `/readyz` → 503; API returns 503 `service_unavailable`; no partial writes |
+| Database down | `/readyz` → 503; data endpoints return 503 `service_unavailable` with no driver detail in the body (the session lookup is the first query, so an unauthenticated request still gets 401); covered by `tests/test_resilience.py` |
 | Dataset file missing | Job fails with `dataset_unavailable` (never an empty forecast) |
 | Invalid upload | Rejected with row-level reasons; nothing committed |
 | Stale preview | `preview_expired`, user re-uploads |
@@ -175,6 +181,10 @@ data/datasets/{org_id}/{dataset_id}/v{n}-{fingerprint12}.csv
 `infra/docker-compose.yml` runs Postgres 16, Redis 7, the API (which applies Alembic
 migrations on start), an RQ worker and the Next.js app, with a shared `data` volume. Health
 checks gate startup. Seeding is an explicit one-off command, never a startup side effect.
+
+CI builds all three images, validates the compose file, and starts the API image for real: it
+must migrate, then answer `/healthz` and `/readyz`. The live queue is exercised against a Redis
+7 service container. Neither is claimed on the strength of a code review.
 
 See [`operations.md`](operations.md) for limits, retention, backups and the runbook, and
 [`adr/`](adr) for the decisions behind these choices.

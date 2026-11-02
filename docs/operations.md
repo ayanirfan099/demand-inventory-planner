@@ -82,7 +82,7 @@ a cleanup job exists that this repository does not ship.
 
 | Symptom | Meaning | Action |
 | --- | --- | --- |
-| `/readyz` 503 with `database: error` | DB unreachable | Check `FORECASTOPS_DATABASE_URL`, DB health, credentials |
+| `/readyz` 503 with `database: error`, data endpoints 503 `service_unavailable` | DB unreachable (the API maps driver outages to 503, never 500) | Check `FORECASTOPS_DATABASE_URL`, DB health, credentials |
 | `/readyz` 200 with `queue.degraded` | Redis unreachable, API still serving | Jobs will fail with `queue_unavailable` until Redis returns |
 | Jobs stuck `running` | Worker died mid-job | `sweep_stale_claims()` on poller start fails claims older than the budget + 60 s with `worker_error` and raises an alert; retry the job explicitly |
 | `413` on upload | Over 5 MiB | Raise the limit consciously, or split by store |
@@ -118,8 +118,10 @@ database that contains real data.
 | Lint / types | `ruff check .`, `mypy services/api/app packages/forecasting/src services/worker/worker packages/contracts/src` | |
 | Contract drift | `pytest packages/contracts/tests -q` | 10 tests: limits, metric keys, error codes, alert keys, OpenAPI snapshot |
 | Synthetic smoke | `python scripts/smoke_study.py` | Reproducible pipeline run; explicitly not a benchmark (`docs/benchmark.md`) |
-| Web unit | `cd apps/web && npm run typecheck && npm run lint && npm test` | Vitest: 12 tests (formatting, API client) |
+| Web unit | `cd apps/web && npm run typecheck && npm run lint && npm test` | Vitest: 18 tests (formatting, API client, WCAG contrast of the palette tokens) |
 | Web e2e | `cd apps/web && npm run e2e` | Playwright; boots its own API + web on a throwaway SQLite DB |
+| Live queue | `pytest tests/test_queue_redis.py` | Needs `FORECASTOPS_REDIS_URL`; skips without a broker. CI runs it against a Redis 7 service |
+| Containers | `docker compose -f infra/docker-compose.yml config`, `docker build …` | CI builds all three images and health-checks the API container |
 
 The e2e script (`scripts/e2e-server.sh`) deletes and recreates `data/e2e/e2e.db`. Never point
 it at a database you care about. Screenshots for documentation:

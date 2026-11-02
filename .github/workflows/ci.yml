@@ -89,6 +89,100 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
+  redis:
+    name: Queue — live Redis round trip
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - "6379:6379"
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      FORECASTOPS_REDIS_URL: redis://127.0.0.1:6379/0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements/*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/dev.txt
+
+      # The same test file skips on machines without a broker, so this job is what turns
+      # "never verified" into "verified against a real Redis".
+      - name: Round-trip a forecast job through RQ
+        run: |
+          set +e
+          pytest tests/test_queue_redis.py -q 2>&1 | tee /tmp/redis.log
+          status=${PIPESTATUS[0]}
+          tail -n 40 /tmp/redis.log
+          if [ "$status" -ne 0 ]; then python3 scripts/ci-echo-failure.py /tmp/redis.log; fi
+          exit "$status"
+
+  docker:
+    name: Containers — build images and validate compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate compose and build images
+        run: |
+          set +e
+          {
+            docker compose -f infra/docker-compose.yml config --quiet
+            docker build -f infra/Dockerfile.api -t forecastops-api:ci .
+            docker build -f infra/Dockerfile.worker -t forecastops-worker:ci .
+            docker build -f infra/Dockerfile.web -t forecastops-web:ci .
+          } > /tmp/docker.log 2>&1
+          status=$?
+          tail -n 80 /tmp/docker.log
+          if [ "$status" -ne 0 ]; then python3 scripts/ci-echo-failure.py /tmp/docker.log; fi
+          exit "$status"
+
+      - name: The API image migrates and serves health checks
+        run: |
+          set +e
+          {
+            docker run -d --name api-smoke -p 8000:8000 \
+              -e FORECASTOPS_ENVIRONMENT=production \
+              -e FORECASTOPS_DATABASE_URL=sqlite:////tmp/smoke.db \
+              -e FORECASTOPS_DATA_DIR=/tmp/data \
+              -e FORECASTOPS_ALLOWED_ORIGINS=http://localhost:3000 \
+              forecastops-api:ci
+            for _ in $(seq 1 30); do
+              if curl -fsS http://127.0.0.1:8000/healthz >/dev/null 2>&1; then break; fi
+              sleep 2
+            done
+            echo "--- healthz"
+            curl -fsS http://127.0.0.1:8000/healthz
+            echo
+            echo "--- readyz"
+            curl -fsS http://127.0.0.1:8000/readyz
+            echo
+            echo "--- container log"
+            docker logs api-smoke
+          } > /tmp/smoke.log 2>&1
+          status=$?
+          tail -n 60 /tmp/smoke.log
+          if [ "$status" -ne 0 ]; then python3 scripts/ci-echo-failure.py /tmp/smoke.log; fi
+          exit "$status"
+
+      - name: Stop the smoke container
+        if: always()
+        run: docker rm -f api-smoke || true
+
   e2e:
     name: Browser — Playwright flow
     runs-on: ubuntu-latest

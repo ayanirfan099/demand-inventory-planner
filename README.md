@@ -26,6 +26,7 @@ and no real business data.**
 | Four derived alert rules with acknowledgement | `/alerts` |
 | Forecast / metrics CSV, JSON report, and an export registry | `/audit`, `GET /api/v1/forecast-runs/{id}/exports/report.json` |
 | Org-scoped authN/authZ with owner / analyst / viewer roles | `services/api/app/deps.py` |
+| A database outage returns 503 (not 500) without leaking driver details | `app/errors.py`, `tests/test_resilience.py` |
 | Audit log of every consequential action | `/audit` |
 
 ## Architecture at a glance
@@ -113,9 +114,10 @@ Services: `db` (Postgres 16), `redis` (7), `api`, `worker`, `web`. The API conta
 `alembic upgrade head` before starting. Seeding is deliberately *not* automatic, so a
 restart never mutates demo data.
 
-> The Docker artifacts were written against the same code paths the tests exercise, but
-> this sandbox has no Docker daemon — they have not been built here. Treat them as
-> reviewed-but-unbuilt until CI builds them.
+The images and the compose file are built and checked in CI (`Containers — build images and
+validate compose`): `docker compose config` is validated, all three images are built, and the
+API image is started for real — it applies Alembic migrations, then `/healthz` and `/readyz`
+must answer. That job is the reason this section is a claim rather than a hope.
 
 ## Data contract
 
@@ -199,16 +201,18 @@ All of the following was run in this workspace (Python 3.11, Node 20):
 | --- | --- |
 | `pytest packages/forecasting/tests -q` | 43 passed |
 | `pytest packages/contracts/tests -q` | 10 passed (contract + OpenAPI drift) |
-| `pytest tests -q` (API integration + worker) | 81 passed (~50 s) |
+| `pytest tests -q` (API integration + worker + resilience) | 86 passed (~45 s) |
 | `ruff check .` | All checks passed |
 | `mypy services/api/app packages/forecasting/src services/worker/worker packages/contracts/src` | Success: no issues in 41 source files |
 | `npx tsc --noEmit` (apps/web) | clean |
 | `npx next lint` (apps/web) | no warnings or errors |
-| `npx vitest run` (apps/web) | 12 passed (formatting + API client) |
+| `npx vitest run` (apps/web) | 18 passed (formatting, API client, palette contrast) |
 | `npx next build` (apps/web) | success, 12 routes |
 | `python scripts/export-openapi.py --check` | snapshot current (45 paths) |
 | `python scripts/smoke_study.py` | 12 series, 2 models, ~4 s (synthetic smoke; see [`docs/benchmark.md`](docs/benchmark.md)) |
-| `npx playwright test` | **not executed here** — Chromium cannot be downloaded in this sandbox; the suite runs in CI |
+| `pytest tests/test_queue_redis.py -q` | 2 skipped here (no broker); **passes in CI against a real Redis 7 service** |
+| `docker compose config` + 3 image builds + API container health | **CI only** (`Containers` job) — no Docker daemon in this sandbox |
+| `npx playwright test` | **not executed here** — Chromium cannot be downloaded in this sandbox; green in CI |
 
 Known gaps, stated plainly:
 
@@ -216,9 +220,13 @@ Known gaps, stated plainly:
   environment. `curl` verified page shells, the Next→API proxy and every API endpoint, but
   page *content* is fetched client-side after the session resolves, so no rendered data view
   has been visually checked here. The Playwright suite in CI is what closes that gap.
-- The Docker images have not been built here (no daemon available).
-- Redis/RQ mode has not been exercised against a live Redis; only the `thread` and
-  `external` (DB poller) paths are covered by tests.
+- Docker and the live queue are verified in CI, not here: this sandbox has no Docker daemon
+  and no Redis. Locally the `rq` dispatch contract is covered with a recording queue (job id,
+  queue name, timeout, description) and a refusing queue (`queue_unavailable`); in CI the same
+  job round-trips through a real Redis 7 broker and an RQ worker in burst mode, and the image
+  build plus API container health checks run for real.
+- `tests/test_queue_redis.py` skips when no broker answers, so a laptop without Redis reports
+  "skipped" rather than a false pass.
 
 ## Milestones
 
