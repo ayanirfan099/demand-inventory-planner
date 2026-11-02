@@ -87,7 +87,7 @@ export default function ForecastsPage() {
             <EmptyState title="No jobs yet">Start a forecast above.</EmptyState>
           </div>
         ) : (
-          <div className="table-wrap table-scroll" style={{ border: "none", borderRadius: 0 }}>
+          <div className="table-wrap table-scroll" style={{ border: "none", borderRadius: 0 }} role="region" aria-label="Forecast jobs" tabIndex={0}>
             <table className="data">
               <caption>Twenty-five most recent forecast jobs.</caption>
               <thead>
@@ -163,7 +163,7 @@ export default function ForecastsPage() {
             <EmptyState title="No completed runs yet" />
           </div>
         ) : (
-          <div className="table-wrap table-scroll" style={{ border: "none", borderRadius: 0 }}>
+          <div className="table-wrap table-scroll" style={{ border: "none", borderRadius: 0 }} role="region" aria-label="Forecast runs" tabIndex={0}>
             <table className="data">
               <caption>Holdout metrics. Lower is better; WAPE is undefined when actual demand is zero.</caption>
               <thead>

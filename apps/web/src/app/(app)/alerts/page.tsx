@@ -100,7 +100,7 @@ export default function AlertsPage() {
             </EmptyState>
           </div>
         ) : (
-          <div className="table-wrap" style={{ border: "none", borderRadius: 0 }}>
+          <div className="table-wrap" style={{ border: "none", borderRadius: 0 }} role="region" aria-label="Alerts" tabIndex={0}>
             <table className="data">
               <caption>Alerts for the active organization only.</caption>
               <thead>

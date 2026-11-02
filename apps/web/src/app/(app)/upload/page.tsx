@@ -258,7 +258,7 @@ export default function UploadPage() {
               </div>
             </div>
 
-            <div className="table-wrap table-scroll">
+            <div className="table-wrap table-scroll" role="region" aria-label="Accepted rows preview" tabIndex={0}>
               <table className="data">
                 <caption>First {preview.sample_rows.length} accepted rows (already normalised).</caption>
                 <thead>

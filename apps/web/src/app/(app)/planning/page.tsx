@@ -278,7 +278,7 @@ export default function PlanningPage() {
                         </div>
                       </div>
 
-                      <div className="table-wrap table-scroll">
+                      <div className="table-wrap table-scroll" role="region" aria-label="Reorder suggestions" tabIndex={0}>
                         <table className="data">
                           <caption>
                             Suggestions sorted by newest first. Quantities are rounded up to whole packs; the raw value

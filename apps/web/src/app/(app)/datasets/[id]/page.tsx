@@ -241,7 +241,7 @@ export default function DatasetDetailPage() {
         subtitle="On-hand is used only by reorder suggestions; it never influences the forecast"
         flush
       >
-        <div className="table-wrap table-scroll" style={{ border: "none", borderRadius: 0 }}>
+        <div className="table-wrap table-scroll" style={{ border: "none", borderRadius: 0 }} role="region" aria-label="Series and on-hand stock" tabIndex={0}>
           <table className="data">
             <caption>
               {series.length} store/item series. {canEdit ? "Edit on-hand stock inline." : "Read-only role."}
@@ -296,8 +296,9 @@ export default function DatasetDetailPage() {
       </Card>
 
       <Card title="Version history" subtitle="Immutable imports, newest first" flush>
-        <div className="table-wrap" style={{ border: "none", borderRadius: 0 }}>
+        <div className="table-wrap" style={{ border: "none", borderRadius: 0 }} role="region" aria-label="Version history" tabIndex={0}>
           <table className="data">
+            <caption>Immutable imports, newest first. Re-importing identical content adds no version.</caption>
             <thead>
               <tr>
                 <th scope="col">Version</th>
