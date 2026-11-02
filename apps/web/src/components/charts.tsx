@@ -23,7 +23,8 @@ export interface ChartPoint {
   band?: [number, number] | null;
 }
 
-const AXIS = { stroke: "#8296a8", fontSize: 11 };
+// Axis ticks are text, so they use the faint-ink token: 5.13:1 on white (AA normal text).
+const AXIS = { stroke: "#5c7082", fontSize: 11 };
 const GRID = "#e6ecf3";
 
 const numberFormatter = (value: number) => formatNumber(value, 0);

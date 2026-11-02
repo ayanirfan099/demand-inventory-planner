@@ -11,7 +11,7 @@
   --ink: #12202e;
   --ink-soft: #33475b;
   --ink-muted: #566a7f;   /* >= 4.96:1 on every surface token */
-  --ink-faint: #6f8496;  /* 3.2:1 on canvas-deep: large/secondary text only */
+  --ink-faint: #5c7082;  /* 4.56:1 on canvas-deep, 5.13:1 on white: AA for normal text */
   --line: #dde5ee;
   --line-strong: #c6d2df;
 

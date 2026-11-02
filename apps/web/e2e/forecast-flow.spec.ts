@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { expectAccessible } from "./axe";
 import { demoCsv, signIn } from "./helpers";
 
 test.describe("forecast workflow", () => {
@@ -93,6 +94,27 @@ test.describe("forecast workflow", () => {
     await page.goto("/alerts");
     await expect(page.getByRole("heading", { name: "Alerts" })).toBeVisible();
     await expect(page.locator(".kpi-label", { hasText: "Open" }).first()).toBeVisible();
+
+    // --- Accessibility of the data-dense screens -----------------------------------
+    // These pages are audited here rather than in the accessibility spec because they are only
+    // meaningful once a run and its suggestions exist: charts, metric tables and reorder rows.
+    await expectAccessible(page, "alerts with data");
+    await page.goto("/planning");
+    await page.waitForLoadState("networkidle");
+    await expectAccessible(page, "planning with suggestions");
+    await page.goto("/datasets");
+    await page.waitForLoadState("networkidle");
+    await expectAccessible(page, "datasets with an imported dataset");
+
+    // The run detail page is reached again so the audit sees the charts with real points.
+    await page.goto(`/forecasts`);
+    const runLink = page.locator('a[href^="/forecasts/"]').first();
+    if (await runLink.isVisible()) {
+      await runLink.click();
+      await page.waitForURL(/\/forecasts\/\d+$/);
+      await page.waitForLoadState("networkidle");
+      await expectAccessible(page, "run detail");
+    }
   });
 
   test("a viewer sees a read-only workspace", async ({ page, browser }) => {
