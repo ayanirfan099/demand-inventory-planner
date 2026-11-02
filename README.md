@@ -238,5 +238,6 @@ Known gaps, stated plainly:
 - **M4** — inventory policies and reorder suggestions.
 - **M5** — benchmark polish, seeded demo, deployment, limitations pass.
 
-Each milestone is a reviewed pull request; nothing is tagged `v1.0.0` without the owner's
-explicit sign-off.
+Each milestone is a reviewed pull request. `v1.0.0` was tagged from `main` after the M5
+sign-off; what it contains, and what it explicitly does not, is in
+[`docs/release-notes-v1.0.0.md`](docs/release-notes-v1.0.0.md).
