@@ -37,8 +37,9 @@ describe("palette contrast", () => {
   it("keeps secondary and muted text readable on every surface it is used on", () => {
     for (const surface of ["surface", "canvas", "surface-muted", "canvas-deep"]) {
       expect(meetsWcag(token("ink-muted"), token(surface))).toBe(true);
-      // Faint is only used for large or non-essential text, so the 3:1 large-text bar applies.
-      expect(meetsWcag(token("ink-faint"), token(surface), "AA-large")).toBe(true);
+      // Faint ink is used for captions, table metadata and axis ticks at 11-13px, so it has to
+      // clear the normal-text bar - the large-text concession hid three real failures.
+      expect(meetsWcag(token("ink-faint"), token(surface))).toBe(true);
     }
   });
 

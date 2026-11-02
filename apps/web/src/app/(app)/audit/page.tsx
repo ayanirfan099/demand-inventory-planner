@@ -68,7 +68,7 @@ export default function AuditPage() {
             </EmptyState>
           </div>
         ) : (
-          <div className="table-wrap table-scroll" style={{ border: "none", borderRadius: 0 }}>
+          <div className="table-wrap table-scroll" style={{ border: "none", borderRadius: 0 }} role="region" aria-label="Audit events" tabIndex={0}>
             <table className="data">
               <caption>Newest first. Payloads are trimmed to the fields relevant to the action.</caption>
               <thead>
@@ -117,7 +117,7 @@ export default function AuditPage() {
             <EmptyState title="No exports yet">Export a forecast or report from any run.</EmptyState>
           </div>
         ) : (
-          <div className="table-wrap" style={{ border: "none", borderRadius: 0 }}>
+          <div className="table-wrap" style={{ border: "none", borderRadius: 0 }} role="region" aria-label="Report exports" tabIndex={0}>
             <table className="data">
               <thead>
                 <tr>

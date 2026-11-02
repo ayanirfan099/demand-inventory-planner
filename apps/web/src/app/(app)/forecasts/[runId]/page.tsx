@@ -279,7 +279,7 @@ export default function RunDetailPage() {
               <div className="skeleton" style={{ height: 120 }} />
             ) : (
               <>
-                <div className="table-wrap">
+                <div className="table-wrap" role="region" aria-label="Model comparison" tabIndex={0}>
                   <table className="data" style={{ minWidth: 260 }}>
                     <thead>
                       <tr>
@@ -323,7 +323,7 @@ export default function RunDetailPage() {
                 This job ran with validation disabled; model choice fell back to the holdout ordering.
               </EmptyState>
             ) : (
-              <div className="table-wrap">
+              <div className="table-wrap" role="region" aria-label="Validation folds" tabIndex={0}>
                 <table className="data" style={{ minWidth: 240 }}>
                   <thead>
                     <tr>
@@ -430,7 +430,7 @@ export default function RunDetailPage() {
               WAPE is undefined for every series in this window (all-zero demand).
             </EmptyState>
           ) : (
-            <div className="table-wrap table-scroll">
+            <div className="table-wrap table-scroll" role="region" aria-label="Weakest series" tabIndex={0}>
               <table className="data" style={{ minWidth: 280 }}>
                 <caption>Top {weak_series.length} series by holdout WAPE (highest error first).</caption>
                 <thead>

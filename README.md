@@ -213,6 +213,7 @@ All of the following was run in this workspace (Python 3.11, Node 20):
 | `pytest tests/test_queue_redis.py -q` | 2 skipped here (no broker); **passes in CI against a real Redis 7 service** |
 | `docker compose config` + 3 image builds + API container health | **CI only** (`Containers` job) — no Docker daemon in this sandbox |
 | `npx playwright test` | **not executed here** — Chromium cannot be downloaded in this sandbox; green in CI |
+| axe-core WCAG 2.1 A/AA audit (browser suite) | **CI only** — login, all seven pages, and the data-dense screens once a run and suggestions exist; zero violations |
 
 Known gaps, stated plainly:
 

@@ -120,6 +120,7 @@ database that contains real data.
 | Synthetic smoke | `python scripts/smoke_study.py` | Reproducible pipeline run; explicitly not a benchmark (`docs/benchmark.md`) |
 | Web unit | `cd apps/web && npm run typecheck && npm run lint && npm test` | Vitest: 18 tests (formatting, API client, WCAG contrast of the palette tokens) |
 | Web e2e | `cd apps/web && npm run e2e` | Playwright; boots its own API + web on a throwaway SQLite DB |
+| Accessibility | `cd apps/web && npx playwright test e2e/accessibility.spec.ts` | axe-core WCAG 2.1 A/AA; the flow spec audits run detail, planning, alerts and datasets too |
 | Live queue | `pytest tests/test_queue_redis.py` | Needs `FORECASTOPS_REDIS_URL`; skips without a broker. CI runs it against a Redis 7 service |
 | Containers | `docker compose -f infra/docker-compose.yml config`, `docker build …` | CI builds all three images and health-checks the API container |
 

@@ -309,7 +309,7 @@ export default function DashboardPage() {
             <EmptyState title="No jobs yet">Start a forecast below to create the first one.</EmptyState>
           </div>
         ) : (
-          <div className="table-wrap" style={{ border: "none", borderRadius: 0 }}>
+          <div className="table-wrap" style={{ border: "none", borderRadius: 0 }} role="region" aria-label="Recent forecast jobs" tabIndex={0}>
             <table className="data">
               <caption>Most recent six forecast jobs. Status updates live while a job runs.</caption>
               <thead>
